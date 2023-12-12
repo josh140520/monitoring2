@@ -39,7 +39,7 @@ WindowManager:
                     text: 'MONITORING APP'
                     color: 0, 0, 0, 1
                     font_size: 50
-                    font_size: self.parent.width * 0.175 #adjust
+                    font_size: self.parent.width * 0.15 #adjust
                     size_hint: None, None
                     size: self.texture_size
 
@@ -578,7 +578,7 @@ WindowManager:
                     text: 'Connection Page'
                     color: 0, 0, 0, 1
                     font_size: 50
-                    font_size: self.parent.width * 0.175 #adjust
+                    font_size: self.parent.width * 0.15 #adjust
                     size_hint: None, None
                     size: self.texture_size
 
@@ -631,13 +631,18 @@ WindowManager:
                     text: "Port Set Up"
                     font_size: 25
                     background_color: 0.7, 0, 0, 0.7  # Red color
-                    on_press: root.port_selection(self)
+                    on_press:
+                        root.port_selection(self)
+                        self.background_color = (0.7, 0, 0, 1)
+                    on_release:
+                        self.background_color = (0.7, 0, 0, 0.7)
 
 
                 Button:
                     font_size: 25
                     text: "Display Server"
                     background_color: 0, 0, 0.7, 0.7
+                    on_release: root.display()
                 Button:
                     font_size: 25
                     text: "Connect"
@@ -687,14 +692,14 @@ WindowManager:
                         padding_y: 50   # Add vertical padding
                         text_size: self.size
                         bold: True  # Make the text bold
-                    Label:
-                        text: 'ESP8266 Status:\n' + root.ESP_status
-                        color: 0, 0, 0, 1  # Black color
-                        font_size: 20
-                        padding_x: 30  # Add horizontal padding
-                        padding_y: 50    # Add vertical padding
-                        text_size: self.size
-                        bold: True  # Make the text bold
+                    #Label:
+                    #    text: 'ESP8266 Status:\n' + root.ESP_status
+                    #    color: 0, 0, 0, 1  # Black color
+                    #    font_size: 20
+                    #    padding_x: 30  # Add horizontal padding
+                    #    padding_y: 50    # Add vertical padding
+                    #    text_size: self.size
+                    #    bold: True  # Make the text bold
 
 
 
@@ -758,7 +763,7 @@ WindowManager:
                     text: 'MONITORING HISTORY'
                     color: 0, 0, 0, 1
                     font_size: 50
-                    font_size: self.parent.width * 0.175 #adjust
+                    font_size: self.parent.width * 0.14 #adjust
                     size_hint: None, None
                     size: self.texture_size
 

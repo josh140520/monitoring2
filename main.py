@@ -3,13 +3,14 @@ import math
 import sqlite3
 import os
 import time
-from multiprocessing import Process
+
+from statistics import mean
 
 import matplotlib.pyplot as plt
 import threading
-import numpy as np
-#from openpyxl import load_workbook
-import matplotlib.dates as mdates
+
+
+
 import kivy
 import random
 
@@ -30,7 +31,7 @@ from kivy.metrics import dp
 from kivy.graphics import Rectangle, Color
 from kivy.uix.spinner import Spinner
 
-from database import Database
+
 from kivy.uix.scrollview import ScrollView
 from kivy.properties import BooleanProperty
 from kivy.uix.popup import Popup
@@ -39,7 +40,7 @@ from kivy.core.window import Window
 from kivy.uix.slider import Slider
 from kivy.clock import Clock
 from kivy.garden.matplotlib.backend_kivyagg import FigureCanvasKivyAgg
-import write
+
 import datetime
 from flask import Flask, request
 global db_file
@@ -171,7 +172,7 @@ class MainWindow(Screen): #Main screen
         notif_flows = []
         notif_pressures = []
         notif_battery = []
-        trigger = 600
+        trigger = 20
 
         # Iterate through the dictionary
         for time, values in notification_val.items():
@@ -937,9 +938,9 @@ class ConnWindow(Screen):
     app_name_color_conn = ListProperty([1, 1, 1, 1])
     font_size_dp_conn = NumericProperty(40)
     background_color_conn = ListProperty([0.1, 0.2, 0.4, 0.8])
-    flask_server = StringProperty("On")
-    running_server = StringProperty("http://192.168.31.21:8080")
-    ESP_status = StringProperty("Connected")
+    flask_server = StringProperty()
+    running_server = StringProperty()
+    #ESP_status = StringProperty()
 
     def __init__(self, **kwargs):
         super(ConnWindow, self).__init__(**kwargs)
@@ -966,7 +967,23 @@ class ConnWindow(Screen):
             batt1 = self.battery
             return "Data Received"
 
+    def display(self):
+        global temp_dict, port_number
+        try:
+            if port_number is None:
+                self.flask_server = 'OFF'
+            else:
+                self.flask_server = "ON"
+                self.running_server = f'192.168.168.66:{port_number}'
+        except:
+            self.flask_server = 'OFF'
+            self.running_server = 'No Server'
+        '''if temp_dict is None:
 
+            self.ESP_status = 'CONNECTED'
+        else:
+
+            self.ESP_status = "DISCONNECTED"'''
 
 
     def run_flask_server(self):
@@ -1013,10 +1030,27 @@ class ConnWindow(Screen):
             print(port_number)
             popup.dismiss()
 
-
         def show_error_popup(title, content):
-            # Display a new popup with the specified title and content
-            error_popup = Popup(title=title, content=Label(text=content), size_hint=(None, None), size=(400, 200))
+            # Create a BoxLayout for vertical alignment
+            box_layout = BoxLayout(orientation='vertical')
+
+            # Add a Label for the content with appropriate text alignment
+            label = Label(text=content, halign='center', valign='middle')
+
+            # Add an "OK" button to dismiss the popup
+            ok_button = Button(text="CANCEL", size_hint_y=None, height='48dp', background_color=(0.7, 0, 0, 0.8))
+            ok_button.bind(on_press=lambda instance: error_popup.dismiss())
+
+            # Add the Label and Button to the BoxLayout
+            box_layout.add_widget(label)
+            box_layout.add_widget(ok_button)
+
+
+            # Create the Popup with the BoxLayout as its content and set background color
+            error_popup = Popup(title=title, content=box_layout, size_hint=(None, None), size=(400, 200),
+                                background_color=(0.7, 0.7, 0.7, 0.7))  # Adjust the color as needed
+
+            # Display the Popup
             error_popup.open()
 
         # Creating the main GridLayout for the Popup content
@@ -1030,12 +1064,12 @@ class ConnWindow(Screen):
         sub_layout = GridLayout(cols=2)
 
         # Adding a button to the first column of the first row
-        button1 = Button(text='Submit')
+        button1 = Button(text='Submit', background_color=(0, 0.7, 0, 0.8))
         button1.bind(on_press=on_submit)  # Bind the button to the submit function
         sub_layout.add_widget(button1)
 
         # Adding a button to the second column of the first row
-        button2 = Button(text='Cancel')
+        button2 = Button(text='Cancel', background_color=(0.7, 0, 0, 0.8))
         button2.bind(on_press=on_cancel)
         sub_layout.add_widget(button2)
 
@@ -1046,7 +1080,7 @@ class ConnWindow(Screen):
         lower_layout = GridLayout(cols=1)
 
         # Adding a button to the lower GridLayout
-        lower_button = Button(text='Default Port')
+        lower_button = Button(text='Default Port', background_color=(0.7, 0.7, 0.7, 0.8))
         lower_button.bind(on_press=deffault_port)
         lower_layout.add_widget(lower_button)
 
@@ -1056,7 +1090,9 @@ class ConnWindow(Screen):
         # Creating the popup window with the main GridLayout as content
         popup_title = "Selection of Port Number"
         popup = Popup(title=popup_title, content=main_layout,
-                      size_hint=(None, None), size=(400, 200))
+                      size_hint=(None, None), size=(400, 200),
+                      background_color=(0.318, 0.749, 1, 0.729))
+        popup.title_align = 'center'
 
         # Displaying the popup
         popup.open()
@@ -1346,7 +1382,12 @@ class GraphWindow(Screen): #3rd window
         fig, ax = plt.subplots()
 
         x_values = list(temp_dict.keys())
+        x_values = [key or 0 for key in x_values]
+        x_values = x_values[29::30]
+        print(f'thex{x_values}:{len(x_values)}')
         y_values = list(temp_dict.values())
+        window_size = 30
+        y_values = [mean([v for v in values if v is not None]) if any(v is not None for v in values) else None for values in [y_values[i:i + window_size] for i in range(0, len(y_values), window_size)]]
 
         high_y_value = 41.2
         plt.axhline(y=high_y_value, color='red', linestyle='dashed', alpha=0.35, linewidth=1, dashes=(8, 8))
@@ -1374,6 +1415,8 @@ class GraphWindow(Screen): #3rd window
                 tick.set_color('black')
                 tick.set_rotation(25)
                 tick.set_fontsize(7)
+                tick.set_weight('bold')
+
 
         ax.grid(True)
         ax.legend()
@@ -1393,7 +1436,11 @@ class GraphWindow(Screen): #3rd window
         fig, ax = plt.subplots()
 
         x_values = list(flow_dict.keys())
+        x_values = [key or 0 for key in x_values]
+        x_values = x_values[29::30]
         y_values = list(flow_dict.values())
+        window_size = 30
+        y_values = [mean([v for v in values if v is not None]) if any(v is not None for v in values) else None for values in [y_values[i:i + window_size] for i in range(0, len(y_values), window_size)]]
 
         high_y_value = 15
         plt.axhline(y=high_y_value, color='red', linestyle='dashed', alpha=0.35, linewidth=1, dashes=(8, 8))
@@ -1422,6 +1469,7 @@ class GraphWindow(Screen): #3rd window
                 tick.set_color('black')
                 tick.set_rotation(25)
                 tick.set_fontsize(7)
+                tick.set_weight('bold')
 
         ax.grid(True)
         ax.legend()
@@ -1445,7 +1493,12 @@ class GraphWindow(Screen): #3rd window
         fig, ax = plt.subplots()
 
         x_values = list(pressure_dict.keys())
+        x_values = [key or 0 for key in x_values]
+        x_values = x_values[29::30]
         y_values = list(pressure_dict.values())
+        window_size = 30
+        y_values = [mean([v for v in values if v is not None]) if any(v is not None for v in values) else None for values in [y_values[i:i + window_size] for i in range(0, len(y_values), window_size)]]
+
 
         high_y_value = 41.2
         plt.axhline(y=high_y_value, color='red', linestyle='dashed', alpha=0.35, linewidth=1, dashes=(8, 8))
@@ -1474,6 +1527,7 @@ class GraphWindow(Screen): #3rd window
                 tick.set_color('black')
                 tick.set_rotation(25)
                 tick.set_fontsize(7)
+                tick.set_weight('bold')
 
         ax.grid(True)
         ax.legend()
@@ -1493,7 +1547,11 @@ class GraphWindow(Screen): #3rd window
         fig, ax = plt.subplots()
 
         x_values = list(batt_dict.keys())
+        x_values = [key or 0 for key in x_values]
+        x_values = x_values[29::30]
         y_values = list(batt_dict.values())
+        window_size = 30
+        y_values = [mean([v for v in values if v is not None]) if any(v is not None for v in values) else None for values in [y_values[i:i + window_size] for i in range(0, len(y_values), window_size)]]
 
         # Plot the line for y-values
         ax.plot(x_values, y_values, color='blue')
@@ -1516,6 +1574,7 @@ class GraphWindow(Screen): #3rd window
                 tick.set_color('black')
                 tick.set_rotation(25)
                 tick.set_fontsize(7)
+                tick.set_weight('bold')
 
         ax.grid(True)
         ax.legend()
@@ -1877,6 +1936,14 @@ class ErrorPopup(Popup):
 class MonitoringApp(App):
 
     def build(self):
+        fixed_size = (500, 650)
+
+        # Set the window size to the fixed size
+        Window.size = fixed_size
+
+        # Set the minimum and maximum size to the fixed size
+        Window.minimum_width = Window.maximum_width = fixed_size[0]
+        Window.minimum_height = Window.maximum_height = fixed_size[1]
         return Builder.load_file("monitoring.kv")
 
     def exit_app(self):
