@@ -37,7 +37,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3==3.11.4,hostpython3==3.11.4,kivy==1.9.1,pillow==9.5.0,requests,flasks,xlsxwriter,statistics
+requirements = python3==3.7.6,hostpython3==3.7.6,kivy,pillow==9.5.0,requests,flasks,xlsxwriter,statistics,cython
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -67,7 +67,7 @@ orientation = portrait
 # author = © Copyright Info
 
 # change the major version of python used by the app
-osx.python_version = 3.11.4
+osx.python_version = 3.7.6
 
 # Kivy version to use
 osx.kivy_version = 1.9.1
