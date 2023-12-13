@@ -3,18 +3,18 @@ import math
 import sqlite3
 import os
 import time
+import threading
+import datetime
+
 
 from statistics import mean
-
 import matplotlib.pyplot as plt
-import threading
-
-
-
 import kivy
-import random
 
-import pandas as pd
+import xlsxwriter
+from flask import Flask, request
+
+
 from kivy.app import App
 from kivy.core.audio import SoundLoader
 from kivy.properties import ListProperty, NumericProperty, DictProperty, StringProperty
@@ -41,8 +41,8 @@ from kivy.uix.slider import Slider
 from kivy.clock import Clock
 from kivy.garden.matplotlib.backend_kivyagg import FigureCanvasKivyAgg
 
-import datetime
-from flask import Flask, request
+
+
 global db_file
 db_file = 'monitoring_database.db'
 
@@ -261,7 +261,7 @@ class MainWindow(Screen): #Main screen
     def notification(self, instance):
         global temperatures_sum, flows_sum, pressures_sum
         global notif_temperatures, notif_flows, notif_pressures, notif_battery
-
+        fsize = 17
         # Check if the variables are defined
         if 'temperatures_sum' not in globals() or 'flows_sum' not in globals() or 'pressures_sum' not in globals():
             # If not defined, call notif_data to initialize them
@@ -273,54 +273,75 @@ class MainWindow(Screen): #Main screen
         # Add labels for temperature sum, flow sum, and pressure sum to the content layout
         if temperatures_sum < 0:
 
-            content_layout.add_widget(Label(text=f'Temperature is Low for: {temperatures_sum * -10} second(s).'))
+            content_layout.add_widget(Label(text=f'Temperature is Low for: {temperatures_sum * -10} second(s).', font_size=fsize))
 
         elif temperatures_sum > 0:
 
-            content_layout.add_widget(Label(text=f'Temperature is High for: {temperatures_sum * 10} second(s).'))
+            content_layout.add_widget(Label(text=f'Temperature is High for: {temperatures_sum * 10} second(s).', font_size=fsize))
         else:
             if not notif_temperatures:
-                content_layout.add_widget(Label(text=f'Temperature: No Data'))
+                content_layout.add_widget(Label(text=f'Temperature: No Data', font_size=fsize))
             else:
-                content_layout.add_widget(Label(text=f'Temperature is Normal'))
+                content_layout.add_widget(Label(text=f'Temperature is Normal', font_size=fsize))
 
         if flows_sum < 0:
 
-            content_layout.add_widget(Label(text=f'Flow is Low for: {flows_sum * -10} second(s).'))
+            content_layout.add_widget(Label(text=f'Flow is Low for: {flows_sum * -10} second(s).', font_size=fsize))
         elif flows_sum > 0:
 
-            content_layout.add_widget(Label(text=f'Flow is High for: {flows_sum * 10} second(s).'))
+            content_layout.add_widget(Label(text=f'Flow is High for: {flows_sum * 10} second(s).', font_size=fsize))
         else:
             if not notif_flows:
-                content_layout.add_widget(Label(text=f'Flow: No Data'))
+                content_layout.add_widget(Label(text=f'Flow: No Data', font_size=fsize))
             else:
-                content_layout.add_widget(Label(text=f'Flow is Normal'))
+                content_layout.add_widget(Label(text=f'Flow is Normal', font_size=fsize))
 
         if pressures_sum < 0:
 
-            content_layout.add_widget(Label(text=f'Pressure is Low for: {pressures_sum * -10} second(s).'))
+            content_layout.add_widget(Label(text=f'Pressure is Low for: {pressures_sum * -10} second(s).', font_size=fsize))
         elif pressures_sum > 0:
 
-            content_layout.add_widget(Label(text=f'Pressure is High for: {pressures_sum * 10} second(s).'))
+            content_layout.add_widget(Label(text=f'Pressure is High for: {pressures_sum * 10} second(s).', font_size=fsize))
         else:
             if not notif_pressures:
-                content_layout.add_widget(Label(text=f'Pressure: No Data'))
+                content_layout.add_widget(Label(text=f'Pressure: No Data', font_size=fsize))
             else:
-                content_layout.add_widget(Label(text=f'Pressure is Normal'))
+                content_layout.add_widget(Label(text=f'Pressure is Normal', font_size=fsize))
         # Create a Label for the main notification message
-        main_message = Label(text='Longest Recorded Value')
+        main_message = Label(text='Longest Recorded Value', font_size=20, font_name="Arial")
+        main_message.size_hint = (1, 0.3)  # 20% of the height
+        content_layout.size_hint = (1, 0.5)
+
         button = Button(
             text='Stop Ringtone',
-            size_hint=(None, None),
+            size_hint=(0.5, None),
             size=(100, 50),
             pos_hint={'center_x': 0.5},
-            on_release=self.stop_ringtone
+            on_release=self.stop_ringtone,
+            background_color=(0, 0.7, 0, 0.7)
         )
+        button2 = Button(
+            text='Cancel',
+            size_hint=(0.5, None),
+            size=(100, 50),
+            pos_hint={'center_x': 0.5},
+            on_release=self.cancel,
+            background_color=(0.7, 0, 0, 0.7)
+        )
+
         # Create a BoxLayout to hold the main message and content layout
-        main_layout = BoxLayout(orientation='vertical')
+        main_layout = GridLayout(cols=1, rows=3, spacing=10)
+
+        # Create a GridLayout for the buttons and set it to have 1 row with 2 columns
+        buttons_layout = GridLayout(cols=2, rows=1, spacing=10)
+        buttons_layout.size_hint = (1, 0.2)
+        buttons_layout.add_widget(button)
+        buttons_layout.add_widget(button2)
+
+        # Add widgets to the main layout
         main_layout.add_widget(main_message)
         main_layout.add_widget(content_layout)
-        main_layout.add_widget(button)
+        main_layout.add_widget(buttons_layout)
 
         # Create the Popup with the main layout
         popup = Popup(
@@ -328,11 +349,17 @@ class MainWindow(Screen): #Main screen
             content=main_layout,
             size_hint=(None, None),
             size=(self.width * 0.7, self.height * 0.8),
-            auto_dismiss=True
+            auto_dismiss=True,
+            background_color=(0, 0.533, 0.62, 0.5),
+            separator_color=(1, 1, 1, 1)
         )
-
+        self.popup = popup
         popup.open()
 
+    def cancel(self, instance):
+        print("Ringtone stopped")
+        # Dismiss the popup
+        self.popup.dismiss()
 
     def start_testing(self, instance):
         if MainWindow.testing_enabled is False:
@@ -1251,110 +1278,115 @@ class GraphWindow(Screen): #3rd window
             # Fetch all the data into a Pandas DataFrame
             columns = [description[0] for description in cursor.description]
             data = cursor.fetchall()
-            df = pd.DataFrame(data, columns=columns)
+            list_of_dicts = [dict(zip(columns, row)) for row in data]
 
             # Create an Excel file
-            excel_file = f"Data_{self.selected_table.replace(' ', '_')}.xlsx"  # Replace 'output.xlsx' with your desired Excel file name
+            excel_file = f"Data_{self.selected_table.replace(' ', '_')}.xlsx"
+            workbook = xlsxwriter.Workbook(excel_file)
+            worksheet = workbook.add_worksheet('Measurements')
 
-            # Write the DataFrame to the Excel file
-            with pd.ExcelWriter(excel_file, engine='xlsxwriter') as excel_writer:
-                # Write the DataFrame to the Excel file
-                df.to_excel(excel_writer, index=False, sheet_name='Measurements')
+            # Write headers
+            for col_num, header in enumerate(columns):
+                worksheet.write(0, col_num, header)
 
-                # Get the xlsxwriter workbook and worksheet objects
-                workbook = excel_writer.book
-                worksheet = excel_writer.sheets['Measurements']
+            # Write data
+            for row_num, row_data in enumerate(list_of_dicts, 1):
+                for col_num, cell_value in enumerate(columns):
+                    worksheet.write(row_num, col_num, row_data.get(cell_value, ''))
 
-                # Add a border to all cells in the worksheet
-                border_format = workbook.add_format({'border': 1})  # 1 represents a thin border
-                worksheet.conditional_format(0, 0, df.shape[0], df.shape[1] - 1,
-                                             {'type': 'no_blanks', 'format': border_format})
+            # Get the xlsxwriter workbook and worksheet objects
+            worksheet.set_column('A:Z', 15)  # Adjust column width for better visibility
 
-                # Get the max row and column for the data
-                max_row = df.shape[0]
-                max_col = df.shape[1]
+            # Add a border to all cells in the worksheet
+            border_format = workbook.add_format({'border': 1})  # 1 represents a thin border
+            worksheet.conditional_format(0, 0, len(list_of_dicts), len(columns) - 1,
+                                         {'type': 'no_blanks', 'format': border_format})
 
-                # CHART 2
-                chart2 = workbook.add_chart({'type': 'line'})
+            # Get the max row and column for the data
+            max_row = len(list_of_dicts)
+            max_col = len(columns)
 
-                # Configure the series for the chart
-                chart2.set_title({'name': 'Temperature Sensor', 'name_font': {'size': 50}})
-                chart2.set_x_axis({'name': 'Time', 'name_font': {'size': 50}})
-                chart2.set_y_axis({'name': 'Temperature', 'name_font': {'size': 50}})
-                chart2.set_legend({'font': {'size': 25}})
+            # CHART 2
+            chart2 = workbook.add_chart({'type': 'line'})
 
-                chart2.add_series({
-                    'name': 'Temperature',
-                    'name_font': {'size': 50, 'bold': True},
-                    'categories': f'=Measurements!$A$2:$A${max_row + 1}',
-                    'values': f'=Measurements!$C$2:$C${max_row + 1}',
-                })
-                chart2.set_size({'width': 1000, 'height': 1000})
-                # Insert the chart into the worksheet
-                worksheet2 = workbook.add_worksheet('Temperature Graph')
-                worksheet2.insert_chart('C3', chart2)  # 'M2' is the top-left corner of the chart
+            # Configure the series for the chart
+            chart2.set_title({'name': 'Temperature Sensor', 'name_font': {'size': 50}})
+            chart2.set_x_axis({'name': 'Time', 'name_font': {'size': 50}})
+            chart2.set_y_axis({'name': 'Temperature', 'name_font': {'size': 50}})
+            chart2.set_legend({'font': {'size': 25}})
+
+            chart2.add_series({
+                'name': 'Temperature',
+                'name_font': {'size': 50, 'bold': True},
+                'categories': f'=Measurements!$A$2:$A${max_row + 1}',
+                'values': f'=Measurements!$C$2:$C${max_row + 1}',
+            })
+            chart2.set_size({'width': 1000, 'height': 1000})
+            # Insert the chart into the worksheet
+            worksheet2 = workbook.add_worksheet('Temperature Graph')
+            worksheet2.insert_chart('C3', chart2)  # 'M2' is the top-left corner of the chart
 
 
-                #CHART 3
-                chart3 = workbook.add_chart({'type': 'line'})
+            #CHART 3
+            chart3 = workbook.add_chart({'type': 'line'})
 
-                # Configure the series for the chart
-                chart3.set_title({'name': 'Flow Sensor', 'name_font': {'size': 50}})
-                chart3.set_x_axis({'name': 'Time', 'name_font': {'size': 50}})
-                chart3.set_y_axis({'name': 'Flow', 'name_font': {'size': 50}})
-                chart3.set_legend({'font': {'size': 25}})
+            # Configure the series for the chart
+            chart3.set_title({'name': 'Flow Sensor', 'name_font': {'size': 50}})
+            chart3.set_x_axis({'name': 'Time', 'name_font': {'size': 50}})
+            chart3.set_y_axis({'name': 'Flow', 'name_font': {'size': 50}})
+            chart3.set_legend({'font': {'size': 25}})
 
-                chart3.add_series({
-                    'name': 'Flow',
-                    'name_font': {'size': 50, 'bold': True},
-                    'categories': f'=Measurements!$A$2:$A${max_row + 1}',
-                    'values': f'=Measurements!$D$2:$D${max_row + 1}',
-                })
-                chart3.set_size({'width': 1000, 'height': 1000})
-                # Insert the chart into the worksheet
-                worksheet3 = workbook.add_worksheet('Flow Graph')
-                worksheet3.insert_chart('C3', chart3)  # 'M2' is the top-left corner of the chart
+            chart3.add_series({
+                'name': 'Flow',
+                'name_font': {'size': 50, 'bold': True},
+                'categories': f'=Measurements!$A$2:$A${max_row + 1}',
+                'values': f'=Measurements!$D$2:$D${max_row + 1}',
+            })
+            chart3.set_size({'width': 1000, 'height': 1000})
+            # Insert the chart into the worksheet
+            worksheet3 = workbook.add_worksheet('Flow Graph')
+            worksheet3.insert_chart('C3', chart3)  # 'M2' is the top-left corner of the chart
 
-                # CHART 4
-                chart4 = workbook.add_chart({'type': 'line'})
+            # CHART 4
+            chart4 = workbook.add_chart({'type': 'line'})
 
-                # Configure the series for the chart
-                chart4.set_title({'name': 'Pressure Sensor', 'name_font': {'size': 50}})
-                chart4.set_x_axis({'name': 'Time', 'name_font': {'size': 50}})
-                chart4.set_y_axis({'name': 'Pressure', 'name_font': {'size': 50}})
-                chart4.set_legend({'font': {'size': 25}})
+            # Configure the series for the chart
+            chart4.set_title({'name': 'Pressure Sensor', 'name_font': {'size': 50}})
+            chart4.set_x_axis({'name': 'Time', 'name_font': {'size': 50}})
+            chart4.set_y_axis({'name': 'Pressure', 'name_font': {'size': 50}})
+            chart4.set_legend({'font': {'size': 25}})
 
-                chart4.add_series({
-                    'name': 'Pressure',
-                    'name_font': {'size': 50, 'bold': True},
-                    'categories': f'=Measurements!$A$2:$A${max_row + 1}',
-                    'values': f'=Measurements!$E$2:$E${max_row + 1}',
-                })
-                chart4.set_size({'width': 1000, 'height': 1000})
-                # Insert the chart into the worksheet
-                worksheet4 = workbook.add_worksheet('Pressure Graph')
-                worksheet4.insert_chart('C3', chart4)  # 'M2' is the top-left corner of the chart
+            chart4.add_series({
+                'name': 'Pressure',
+                'name_font': {'size': 50, 'bold': True},
+                'categories': f'=Measurements!$A$2:$A${max_row + 1}',
+                'values': f'=Measurements!$E$2:$E${max_row + 1}',
+            })
+            chart4.set_size({'width': 1000, 'height': 1000})
+            # Insert the chart into the worksheet
+            worksheet4 = workbook.add_worksheet('Pressure Graph')
+            worksheet4.insert_chart('C3', chart4)  # 'M2' is the top-left corner of the chart
 
-                # CHART 5
-                chart5 = workbook.add_chart({'type': 'line'})
+            # CHART 5
+            chart5 = workbook.add_chart({'type': 'line'})
 
-                # Configure the series for the chart
-                chart5.set_title({'name': 'Battery Sensor', 'name_font': {'size': 50}})
-                chart5.set_x_axis({'name': 'Time', 'name_font': {'size': 50}})
-                chart5.set_y_axis({'name': 'Battery', 'name_font': {'size': 50}})
-                chart5.set_legend({'font': {'size': 25}})
+            # Configure the series for the chart
+            chart5.set_title({'name': 'Battery Sensor', 'name_font': {'size': 50}})
+            chart5.set_x_axis({'name': 'Time', 'name_font': {'size': 50}})
+            chart5.set_y_axis({'name': 'Battery', 'name_font': {'size': 50}})
+            chart5.set_legend({'font': {'size': 25}})
 
-                chart5.add_series({
-                    'name': 'Battery Meter',
-                    'name_font': {'size': 50, 'bold': True},
-                    'categories': f'=Measurements!$A$2:$A${max_row + 1}',
-                    'values': f'=Measurements!$F$2:$F${max_row + 1}',
-                })
-                chart5.set_size({'width': 1000, 'height': 1000})
-                # Insert the chart into the worksheet
-                worksheet5 = workbook.add_worksheet('Battery Meter Graph')
-                worksheet5.insert_chart('C3', chart5)  # 'M2' is the top-left corner of the chart
-
+            chart5.add_series({
+                'name': 'Battery Meter',
+                'name_font': {'size': 50, 'bold': True},
+                'categories': f'=Measurements!$A$2:$A${max_row + 1}',
+                'values': f'=Measurements!$F$2:$F${max_row + 1}',
+            })
+            chart5.set_size({'width': 1000, 'height': 1000})
+            # Insert the chart into the worksheet
+            worksheet5 = workbook.add_worksheet('Battery Meter Graph')
+            worksheet5.insert_chart('C3', chart5)  # 'M2' is the top-left corner of the chart
+            workbook.close()
             # Close the database connection
             conn.close()
 
@@ -1936,9 +1968,7 @@ class ErrorPopup(Popup):
 class MonitoringApp(App):
 
     def build(self):
-        
 
-        
         return Builder.load_file("monitoring.kv")
 
     def exit_app(self):
