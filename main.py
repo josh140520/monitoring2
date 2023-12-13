@@ -53,7 +53,7 @@ db_file = 'monitoring_database.db'
 
 
 
-kivy.require("1.9.1")
+kivy.require("2.2.1")
 
 
 
