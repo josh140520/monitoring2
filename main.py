@@ -1936,14 +1936,9 @@ class ErrorPopup(Popup):
 class MonitoringApp(App):
 
     def build(self):
-        fixed_size = (500, 650)
+        
 
-        # Set the window size to the fixed size
-        Window.size = fixed_size
-
-        # Set the minimum and maximum size to the fixed size
-        Window.minimum_width = Window.maximum_width = fixed_size[0]
-        Window.minimum_height = Window.maximum_height = fixed_size[1]
+        
         return Builder.load_file("monitoring.kv")
 
     def exit_app(self):
