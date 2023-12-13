@@ -4,7 +4,7 @@
 title = Monitoring App
 
 # (str) Package name
-package.name = myapp
+package.name = monitoring
 
 # (str) Package domain (needed for android/ios packaging)
 package.domain = org.test
@@ -44,7 +44,7 @@ requirements = python3==3.9.18,hostpython3==3.9.18,kivy,pillow==9.5.0,requests,f
 # requirements.source.kivy = ../../kivy
 
 # (list) Garden requirements
-garden_requirements =matplotlib
+#garden_requirements =matplotlib
 
 # (str) Presplash of the application
 #presplash.filename = %(source.dir)s/data/presplash.png
