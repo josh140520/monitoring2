@@ -67,7 +67,7 @@ orientation = portrait
 # author = © Copyright Info
 
 # change the major version of python used by the app
-osx.python_version = 3.7.6
+osx.python_version = 3.8
 
 # Kivy version to use
 osx.kivy_version = 1.9.1
