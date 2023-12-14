@@ -322,7 +322,7 @@ android.allow_backup = True
 #p4a.url =
 
 # (str) python-for-android fork to use in case if p4a.url is not specified, defaults to upstream (kivy)
-p4a.fork = 'https://github.com/josh140520/python-for-android/blob/develop/pythonforandroid/recipe.py'
+#p4a.fork = 'https://github.com/josh140520/python-for-android/blob/develop/pythonforandroid/recipe.py'
 
 
 # (str) python-for-android branch to use, defaults to master
