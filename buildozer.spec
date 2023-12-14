@@ -1,3 +1,6 @@
+# (str) URL of the package
+source = git+https://github.com/josh140520/python-for-android.git
+
 [app]
 
 # (str) Title of your application
