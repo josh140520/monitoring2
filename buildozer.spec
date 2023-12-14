@@ -44,7 +44,7 @@ requirements = python3==3.9.18,hostpython3==3.9.18,kivy,pillow==9.5.0,requests,f
 # requirements.source.kivy = ../../kivy
 
 # (list) Garden requirements
-garden_requirements =pandas
+#garden_requirements =pandas
 
 # (str) Presplash of the application
 #presplash.filename = %(source.dir)s/data/presplash.png
