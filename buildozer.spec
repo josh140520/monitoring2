@@ -20,8 +20,7 @@ source.include_exts = py,png,jpg,kv,atlas,mp3,db,xlsx
 
 # (list) Source files to exclude (let empty to not exclude anything)
 #source.exclude_exts = spec
-# (str) URL of the package
-source = git+https://github.com/josh140520/python-for-android.git
+
 
 # (list) List of directory to exclude (let empty to not exclude anything)
 #source.exclude_dirs = tests, bin, venv
@@ -39,7 +38,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3==3.9.18,hostpython3==3.9.18,kivy,pillow==9.5.0,requests,flask,Xlsxwriter,statistics,kivy.garden,cython,pyparsing,pygments,matplotlib,git+https://github.com/josh140520/python-for-android.git@develop#subdirectory=pythonforandroid/recipes/matplotlib&egg=custom_matplotlib
+requirements = python3==3.9.18,hostpython3==3.9.18,kivy,pillow==9.5.0,requests,flask,xlsxwriter,statistics,kivy.garden,cython,pyparsing,pygments,matplotlib,git+https://github.com/josh140520/python-for-android.git@develop#subdirectory=pythonforandroid/recipes/matplotlib&egg=custom_matplotlib
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
