@@ -326,7 +326,7 @@ p4a.fork = josh140520
 
 
 # (str) python-for-android branch to use, defaults to master
-p4a.branch = develop/matplotlib
+p4a.branch = develop
 
 # (str) python-for-android specific commit to use, defaults to HEAD, must be within p4a.branch
 #p4a.commit = HEAD
