@@ -1,4 +1,4 @@
-#Pillow version: 9.5
+#Pillow version: 9.5.1
 import math
 import sqlite3
 import os
